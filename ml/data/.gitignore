@@ -1,0 +1,5 @@
+# Raw WAV files are not stored in git (too large)
+# Use Google Drive / shared folder for the actual audio
+*.wav
+*.mp3
+!.gitkeep
