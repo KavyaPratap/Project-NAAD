@@ -4,10 +4,14 @@
 # Output: list of augmented np.ndarray (float32, 16kHz)
 # Last validated: [date, commit]
 
+import os
+import sys
+import glob
 import numpy as np
 import librosa
-import os
-import glob
+
+# Ensure project root is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 SAMPLE_RATE = 16000
 
@@ -107,6 +111,9 @@ def build_augmented_dataset(
     # from mocks.mfcc_mock import extract_mfcc             ← comment out above
 
     noise_files = glob.glob(os.path.join(noise_dir, "*.wav")) if os.path.exists(noise_dir) else []
+    if not noise_files and os.path.exists("naad_kws/noise"):
+        noise_files = glob.glob("naad_kws/noise/*.wav")
+    print(f"Loaded {len(noise_files)} background noise files for augmentation.")
 
     # Per-class augmentation counts for train only.
     # keyword: 64 files x (1+15) = 1024  |  negative: 1036 files x (1+3) = 4144
