@@ -1,0 +1,29 @@
+idf_component_register(
+    SRCS 
+        "../main.c"
+        "../audio_i2s/audio_i2s.c"
+        "../adpcm/adpcm.c"
+        "../transport/preroll.c"
+        "../transport/tcp_client.c"
+        "../telemetry/telemetry.c"
+        "../micro_vad/micro_vad.c"
+        "../micro_vad/dsp_task.c"
+        "../mfcc/mfcc.c"
+        "../kws_tflm/kws_infer.cpp"
+        "../kws_tflm/kws_model_data.cc"
+    INCLUDE_DIRS 
+        ".."
+        "../audio_i2s"
+        "../adpcm"
+        "../transport"
+        "../telemetry"
+        "../micro_vad"
+        "../mfcc"
+        "../kws_tflm"
+    REQUIRES
+        tfmicro
+        nvs_flash
+        esp_wifi
+        driver
+        esp_timer
+)
