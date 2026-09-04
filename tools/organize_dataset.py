@@ -59,39 +59,70 @@ def main():
     random.seed(SEED)
 
     # ── KEYWORD FILES ──────────────────────────────────────────────
-    tts_keyword   = sorted(glob.glob('raw_wav/positive/*.wav'))
-    real_keyword  = sorted(glob.glob('real_data_wav/*.wav'))
-    all_keyword   = tts_keyword + real_keyword
-    random.shuffle(all_keyword)
+    tts_keyword   = sorted(glob.glob('naad_kws/raw_wav/positive/*.wav') + glob.glob('raw_wav/positive/*.wav'))
+    real_keyword  = sorted(glob.glob('naad_kws/real/positive/*.wav') + glob.glob('real_data_wav/*.wav'))
+    
+    # Split separately to guarantee speaker/source diversity across train/val/test
+    random.shuffle(tts_keyword)
+    random.shuffle(real_keyword)
+    
+    tts_kw_tr, tts_kw_va, tts_kw_te = split_list(tts_keyword)
+    real_kw_tr, real_kw_va, real_kw_te = split_list(real_keyword)
+    
+    total_kw = len(tts_keyword) + len(real_keyword)
+    print(f"\n=== KEYWORD ({total_kw} total: {len(tts_keyword)} TTS + {len(real_keyword)} Real) ===")
+    print(f"  train: {len(tts_kw_tr) + len(real_kw_tr)} ({len(tts_kw_tr)} TTS, {len(real_kw_tr)} Real)")
+    print(f"  val  : {len(tts_kw_va) + len(real_kw_va)} ({len(tts_kw_va)} TTS, {len(real_kw_va)} Real)")
+    print(f"  test : {len(tts_kw_te) + len(real_kw_te)} ({len(tts_kw_te)} TTS, {len(real_kw_te)} Real)")
 
-    kw_train, kw_val, kw_test = split_list(all_keyword)
-
-    print(f"\n=== KEYWORD ({len(all_keyword)} total) ===")
-    print(f"  train: {len(kw_train)}, val: {len(kw_val)}, test: {len(kw_test)}")
-
-    copy_files(kw_train, 'ml/data/train/keyword', dry_run=args.dry_run)
-    copy_files(kw_val,   'ml/data/val/keyword',   dry_run=args.dry_run)
-    copy_files(kw_test,  'ml/data/test/keyword',  dry_run=args.dry_run)
+    copy_files(tts_kw_tr, 'ml/data/train/keyword', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_kw_tr, 'ml/data/train/keyword', prefix='real', dry_run=args.dry_run)
+    
+    copy_files(tts_kw_va, 'ml/data/val/keyword', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_kw_va, 'ml/data/val/keyword', prefix='real', dry_run=args.dry_run)
+    
+    copy_files(tts_kw_te, 'ml/data/test/keyword', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_kw_te, 'ml/data/test/keyword', prefix='real', dry_run=args.dry_run)
 
     # ── NEGATIVE FILES ─────────────────────────────────────────────
-    all_negative = sorted(glob.glob('raw_wav/negative/*.wav'))
-    random.shuffle(all_negative)
+    tts_negative  = sorted(glob.glob('naad_kws/raw_wav/negative/*.wav') + glob.glob('raw_wav/negative/*.wav'))
+    real_negative = sorted(glob.glob('naad_kws/real/negative/*.wav'))
 
-    neg_train, neg_val, neg_test = split_list(all_negative)
+    random.shuffle(tts_negative)
+    random.shuffle(real_negative)
 
-    print(f"\n=== NEGATIVE ({len(all_negative)} total) ===")
-    print(f"  train: {len(neg_train)}, val: {len(neg_val)}, test: {len(neg_test)}")
+    tts_neg_tr, tts_neg_va, tts_neg_te = split_list(tts_negative)
+    real_neg_tr, real_neg_va, real_neg_te = split_list(real_negative)
 
-    copy_files(neg_train, 'ml/data/train/negative', dry_run=args.dry_run)
-    copy_files(neg_val,   'ml/data/val/negative',   dry_run=args.dry_run)
-    copy_files(neg_test,  'ml/data/test/negative',  dry_run=args.dry_run)
+    total_neg = len(tts_negative) + len(real_negative)
+    print(f"\n=== NEGATIVE ({total_neg} total: {len(tts_negative)} TTS + {len(real_negative)} Real) ===")
+    print(f"  train: {len(tts_neg_tr) + len(real_neg_tr)} ({len(tts_neg_tr)} TTS, {len(real_neg_tr)} Real)")
+    print(f"  val  : {len(tts_neg_va) + len(real_neg_va)} ({len(tts_neg_va)} TTS, {len(real_neg_va)} Real)")
+    print(f"  test : {len(tts_neg_te) + len(real_neg_te)} ({len(tts_neg_te)} TTS, {len(real_neg_te)} Real)")
+
+    copy_files(tts_neg_tr, 'ml/data/train/negative', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_neg_tr, 'ml/data/train/negative', prefix='real', dry_run=args.dry_run)
+
+    copy_files(tts_neg_va, 'ml/data/val/negative', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_neg_va, 'ml/data/val/negative', prefix='real', dry_run=args.dry_run)
+
+    copy_files(tts_neg_te, 'ml/data/test/negative', prefix='tts', dry_run=args.dry_run)
+    copy_files(real_neg_te, 'ml/data/test/negative', prefix='real', dry_run=args.dry_run)
 
     # ── SUMMARY ────────────────────────────────────────────────────
+    kw_train_total = len(tts_kw_tr) + len(real_kw_tr)
+    kw_val_total   = len(tts_kw_va) + len(real_kw_va)
+    kw_test_total  = len(tts_kw_te) + len(real_kw_te)
+
+    neg_train_total = len(tts_neg_tr) + len(real_neg_tr)
+    neg_val_total   = len(tts_neg_va) + len(real_neg_va)
+    neg_test_total  = len(tts_neg_te) + len(real_neg_te)
+
     mode = '[DRY RUN]' if args.dry_run else '[DONE]'
     print(f"\n{mode} Dataset organized into ml/data/")
-    print(f"\n  Train: {len(kw_train)} keyword + {len(neg_train)} negative = {len(kw_train)+len(neg_train)}")
-    print(f"  Val  : {len(kw_val)} keyword + {len(neg_val)} negative = {len(kw_val)+len(neg_val)}")
-    print(f"  Test : {len(kw_test)} keyword + {len(neg_test)} negative = {len(kw_test)+len(neg_test)}")
+    print(f"\n  Train: {kw_train_total} keyword + {neg_train_total} negative = {kw_train_total + neg_train_total}")
+    print(f"  Val  : {kw_val_total} keyword + {neg_val_total} negative = {kw_val_total + neg_val_total}")
+    print(f"  Test : {kw_test_total} keyword + {neg_test_total} negative = {kw_test_total + neg_test_total}")
 
     if not args.dry_run:
         print("\nNext step: python ml/scripts/augment.py")
