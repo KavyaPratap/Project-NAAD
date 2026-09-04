@@ -123,48 +123,77 @@ def build_augmented_dataset(
         "negative": 3,
     }
 
+    def is_hard_confuser(filename: str) -> bool:
+        base = os.path.basename(filename).lower()
+        confusers = ['naa', 'naak', 'naath', 'naam', 'naal', 'naav', 'naan', 'naag', 'daad', 'baad', 'chaad', 'yaad']
+        for c in confusers:
+            if base.startswith(c) or f"_{c}_" in base or f"_{c}." in base:
+                return True
+        return False
+
     all_splits = {}
     for split in ["train", "val", "test"]:
-        X_list, y_list = [], []
+        X_list, y_list, is_hard_list = [], [], []
         for label, class_name in [(1, "keyword"), (0, "negative")]:
             split_dir = os.path.join(data_dir, split, class_name)
             if not os.path.exists(split_dir):
                 continue
             wav_files = glob.glob(os.path.join(split_dir, "*.wav"))
             print(f"[{split}] {class_name}: {len(wav_files)} files")
-            n_aug = AUGMENTS.get(class_name, n_augments) if split == "train" else 0
             for wav_path in wav_files:
                 audio, _ = librosa.load(wav_path, sr=SAMPLE_RATE, mono=True)
+                hard = (class_name == "negative" and is_hard_confuser(wav_path))
 
                 # Original sample
                 mfcc = extract_mfcc(audio, target_frames=49, quantize=True)
                 X_list.append(mfcc)
                 y_list.append(label)
+                is_hard_list.append(hard)
 
-                # Augmented samples (train only — don't augment val/test!)
-                if split == "train" and n_aug > 0:
-                    augmented = augment_sample(audio, noise_files, n_aug)
-                    for aug_audio in augmented:
-                        aug_mfcc = extract_mfcc(aug_audio, target_frames=49, quantize=True)
-                        X_list.append(aug_mfcc)
-                        y_list.append(label)
+                # Augmented samples (train only)
+                if split == "train":
+                    if class_name == "keyword":
+                        n_aug = 15
+                    elif hard:
+                        n_aug = 12   # Heavy augmentation for hard phonetic confusers (naak, naath, etc.)
+                    else:
+                        n_aug = 2    # Light augmentation for general ambient/negatives
+                        
+                    if n_aug > 0:
+                        augmented = augment_sample(audio, noise_files, n_aug)
+                        for aug_audio in augmented:
+                            aug_mfcc = extract_mfcc(aug_audio, target_frames=49, quantize=True)
+                            X_list.append(aug_mfcc)
+                            y_list.append(label)
+                            is_hard_list.append(hard)
 
         if X_list:
             X = np.array(X_list, dtype=np.float32)[:, :, :, np.newaxis]  # Add channel dim
             y = np.array(y_list, dtype=np.int32)
+            is_hard = np.array(is_hard_list, dtype=bool)
 
-            # Balance train set: down-sample majority class to minority count
+            # Balance train set with Hard Negative Mining:
+            # 100% of hard confusers are kept; remaining negative quota is filled from general negatives.
             if split == "train":
                 kw_idx  = np.where(y == 1)[0]
-                neg_idx = np.where(y == 0)[0]
-                min_count = min(len(kw_idx), len(neg_idx))
+                neg_hard_idx = np.where((y == 0) & (is_hard == True))[0]
+                neg_soft_idx = np.where((y == 0) & (is_hard == False))[0]
+
+                target_neg_count = len(kw_idx)
+                print(f"[{split}] Hard confusers available: {len(neg_hard_idx)} | Target per class: {target_neg_count}")
+
                 np.random.seed(42)
-                kw_sel  = np.random.choice(kw_idx,  min_count, replace=False)
-                neg_sel = np.random.choice(neg_idx, min_count, replace=False)
-                idx = np.concatenate([kw_sel, neg_sel])
+                if len(neg_hard_idx) >= target_neg_count:
+                    neg_sel = np.random.choice(neg_hard_idx, target_neg_count, replace=False)
+                else:
+                    needed_soft = target_neg_count - len(neg_hard_idx)
+                    soft_sel = np.random.choice(neg_soft_idx, min(needed_soft, len(neg_soft_idx)), replace=False)
+                    neg_sel = np.concatenate([neg_hard_idx, soft_sel])
+
+                idx = np.concatenate([kw_idx, neg_sel])
                 np.random.shuffle(idx)
                 X, y = X[idx], y[idx]
-                print(f"[{split}] After balancing: {min_count} keyword + {min_count} negative = {len(X)} total")
+                print(f"[{split}] Balanced with {len(neg_hard_idx)} hard confusers preserved: {len(X)} total samples")
 
             all_splits[split] = (X, y)
             print(f"[{split}] Final: {len(X)} samples (keyword={int(sum(y))}, negative={int(len(y)-sum(y))})")
