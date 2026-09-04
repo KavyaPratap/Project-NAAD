@@ -38,8 +38,8 @@ static QueueHandle_t     s_transport_queue  = NULL;  // dedicated PCM queue for 
 static EventGroupHandle_t s_wifi_events      = NULL;
 #define WIFI_CONNECTED_BIT  BIT0
 
-/* Transport queue depth: 32 frames = 640ms buffer */
-#define TRANSPORT_QUEUE_DEPTH  32
+/* Transport queue depth: 40 frames = 800ms buffer (matches internal queue) */
+#define TRANSPORT_QUEUE_DEPTH  40
 
 /* Read one 320-sample frame from the transport-dedicated PCM queue */
 static bool transport_read_frame(int16_t *out, TickType_t timeout_ticks) {
