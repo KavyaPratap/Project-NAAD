@@ -30,8 +30,8 @@ extern void dsp_task_start(void);
 static const char *TAG = "MAIN";
 
 /* ── WiFi Config — CHANGE THESE ─────────────────────────────── */
-#define WIFI_SSID     "C_BLOCK_F2"      // 2.4GHz band (ESP32 cannot do 5GHz)
-#define WIFI_PASSWORD "welcome2ars"      // WiFi password
+#define WIFI_SSID     "OnePlus Nord CE 2"  // Mobile hotspot (laptop is on this too)
+#define WIFI_PASSWORD "HOTSPOT_PASSWORD"   // ⚠️  FILL IN your hotspot password!
 
 static QueueHandle_t     s_trigger_queue    = NULL;
 static QueueHandle_t     s_transport_queue  = NULL;  // dedicated PCM queue for transport task

@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 /* ── Server connection config — CHANGE THESE ─────────────────── */
-#define SERVER_IP    "192.168.1.128"   // Laptop IP on C_BLOCK_F2_5G network
+#define SERVER_IP    "10.24.173.208"   // Laptop IP on OnePlus Nord CE 2 hotspot
 #define SERVER_PORT  5555
 
 /* ── Packet protocol constants ───────────────────────────────── */

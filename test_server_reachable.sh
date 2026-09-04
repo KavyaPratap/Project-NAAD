@@ -6,7 +6,7 @@
 echo "=== Project NAAD — Port 5555 Reachability Test ==="
 echo ""
 
-LAPTOP_IP="192.168.1.128"
+LAPTOP_IP="10.24.173.208"
 PORT=5555
 
 echo "1. Checking if port $PORT is actually bound..."
