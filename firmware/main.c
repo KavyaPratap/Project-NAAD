@@ -31,7 +31,7 @@ static const char *TAG = "MAIN";
 
 /* ── WiFi Config — CHANGE THESE ─────────────────────────────── */
 #define WIFI_SSID     "OnePlus Nord CE 2"  // Mobile hotspot (laptop is on this too)
-#define WIFI_PASSWORD "HOTSPOT_PASSWORD"   // ⚠️  FILL IN your hotspot password!
+#define WIFI_PASSWORD "112233445566"   // ⚠️  FILL IN your hotspot password!
 
 static QueueHandle_t     s_trigger_queue    = NULL;
 static QueueHandle_t     s_transport_queue  = NULL;  // dedicated PCM queue for transport task

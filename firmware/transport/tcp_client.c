@@ -7,7 +7,7 @@
 #include "esp_timer.h"
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
-#include "lwip/fcntl.h"
+#include <fcntl.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <errno.h>
