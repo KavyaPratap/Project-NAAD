@@ -38,8 +38,8 @@ static QueueHandle_t     s_transport_queue  = NULL;  // dedicated PCM queue for 
 static EventGroupHandle_t s_wifi_events      = NULL;
 #define WIFI_CONNECTED_BIT  BIT0
 
-/* Transport queue depth: 40 frames = 800ms buffer (matches internal queue) */
-#define TRANSPORT_QUEUE_DEPTH  40
+/* Transport queue depth: 25 frames (saves heap memory) */
+#define TRANSPORT_QUEUE_DEPTH  25
 
 /* Read one 320-sample frame from the transport-dedicated PCM queue */
 static bool transport_read_frame(int16_t *out, TickType_t timeout_ticks) {
@@ -260,8 +260,7 @@ static void wifi_init(void) {
 void app_main(void) {
     ESP_LOGI(TAG, "=== PROJECT NAAD FIRMWARE STARTING ===");
 
-    wifi_init();
-    /* Create dedicated PCM queue for transport task (separate from DSP queue) */
+    /* Allocate memory-heavy queues BEFORE wifi_init fragments the heap */
     s_transport_queue = xQueueCreate(TRANSPORT_QUEUE_DEPTH, AUDIO_DMA_SAMPLES * sizeof(int16_t));
     if (s_transport_queue == NULL) {
         ESP_LOGE(TAG, "Failed to create transport PCM queue!");
@@ -270,6 +269,8 @@ void app_main(void) {
     preroll_init();
     audio_i2s_start(s_transport_queue);  // capture pushes to BOTH internal (DSP) and this queue
     ESP_LOGI(TAG, "I2S audio capture started");
+
+    wifi_init();
 
     kws_init();
     ESP_LOGI(TAG, "KWS inference engine initialized");

@@ -31,7 +31,7 @@ static uint32_t           s_drop_count     = 0;
 /* Internal queue depth: 40 frames = 800ms headroom.
  * DSP accumulates 25 frames before MFCC+KWS inference.
  * During inference the capture task keeps producing — needs >= 25 spare slots. */
-#define INTERNAL_QUEUE_DEPTH  40
+#define INTERNAL_QUEUE_DEPTH  25
 
 /* ── Audio capture task (Core 0) ────────────────────────────── */
 static void audio_capture_task(void *arg) {
